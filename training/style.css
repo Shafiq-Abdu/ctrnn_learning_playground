@@ -1,0 +1,393 @@
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;color:#1f2933}
+.module-nav{padding:10px 22px;background:#16202a;color:white;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.module-nav a{color:white;text-decoration:none}
+.module-nav a:hover{text-decoration:underline}
+.hero{background:white;border-bottom:1px solid #d8dee5;padding:22px 26px;display:flex;justify-content:space-between;gap:18px;align-items:flex-start}
+.hero h1{margin:0 0 6px;font-size:31px}
+.hero p{margin:0;color:#687786}
+.badge{border:1px solid #cbd5dd;border-radius:999px;padding:7px 11px;color:#607080;background:#f8fafb;font-size:13px}
+main{max-width:1500px;margin:0 auto;padding:22px}
+.equation-panel,.task-panel,.control-panel,.status-panel,.plot-card,.network-panel,.math-panel,.note-panel{
+  background:white;border:1px solid #d8dee5;border-radius:10px;padding:18px
+}
+.equation-panel{margin-bottom:18px}
+.formula{font-family:Georgia,serif;font-size:19px;font-weight:700;margin:8px 0}
+.formula.small{font-size:16px;font-weight:600}
+.equation-panel p,.task-panel p,.plot-card p,.network-panel p,.math-panel p,.note-panel p,.teach-box p{
+  color:#6d7b87;line-height:1.5;font-size:13px
+}
+.task-panel{display:grid;grid-template-columns:390px 1fr;gap:22px;align-items:center;margin-bottom:18px}
+.task-flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px}
+.task-flow span{padding:8px 10px;border:1px solid #dce3e8;background:#f8fafb;border-radius:7px}
+.layout{display:grid;grid-template-columns:310px 1fr;gap:18px;margin-bottom:18px}
+.control-panel button{width:100%;margin-bottom:8px;padding:9px;background:white;border:1px solid #b9c3cc;border-radius:7px;cursor:pointer;font-size:15px}
+.control-panel button:hover{background:#eef3f6}
+.control-panel label{display:flex;flex-direction:column;gap:5px;margin-top:14px;color:#536270;font-size:13px}
+.control-panel input{padding:7px;border:1px solid #cbd4dc;border-radius:6px;font-size:15px}
+.help{font-size:11px;color:#7d8994;line-height:1.35}
+.fixed-architecture{margin-top:18px;padding-top:12px;border-top:1px solid #e3e8ec}
+.fixed-architecture p{margin:5px 0;color:#667785;font-size:13px}
+.status-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.metric{padding:13px;background:#f8fafb;border:1px solid #dfe6eb;border-radius:8px}
+.metric span,.metric strong{display:block}
+.metric span{font-size:12px;color:#73808d}
+.metric strong{font-size:20px;margin-top:4px}
+.pipeline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px}
+.stage{padding:10px 12px;background:#f7f9fb;border:1px solid #dce3e8;border-radius:7px}
+.stage b,.stage span{display:block}
+.stage span{font-size:11px;color:#77848f;margin-top:3px}
+.teach-box{margin-top:17px;padding:10px 12px;border:1px solid #dfe5ea;background:#fbfcfd;border-radius:7px}
+.teach-box summary{cursor:pointer;font-weight:700}
+.plots{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.plot-card{margin-bottom:0}
+canvas{width:100%;height:auto;background:white;border:1px solid #e0e5e9}
+.network-panel{margin-top:18px}
+#networkSvg{display:block;width:100%;min-height:420px;border-top:1px solid #edf1f4;margin-top:12px}
+.math-panel,.note-panel{margin-top:18px}
+.math-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.math-grid>div{background:#f8fafb;border:1px solid #e0e6ea;border-radius:8px;padding:13px}
+.math-grid h3{margin-top:0}
+.edge{transition:opacity .2s}
+.node-label{font-size:14px}
+@media(max-width:1000px){
+  .task-panel,.layout,.plots,.math-grid{grid-template-columns:1fr}
+  .status-grid{grid-template-columns:1fr 1fr}
+}
+
+
+/* ===== v7.1 compact training layout ===== */
+.module-nav{padding:7px 18px;font-size:13px}
+.hero{padding:12px 18px}
+.hero h1{font-size:25px;margin-bottom:3px}
+.hero p{font-size:12px}
+.badge{padding:5px 9px;font-size:11px}
+main{padding:12px;max-width:1500px}
+.equation-panel,.task-panel,.control-panel,.status-panel,.plot-card,.network-panel,.math-panel,.note-panel{
+  padding:11px;border-radius:8px
+}
+.equation-panel{margin-bottom:10px}
+.equation-panel .formula{font-size:15px;margin:4px 0}
+.equation-panel p{margin:5px 0 0;line-height:1.3;font-size:11px}
+
+.task-panel{
+  grid-template-columns:320px 1fr;
+  gap:12px;
+  margin-bottom:10px;
+  align-items:center
+}
+.task-panel h2,.control-panel h2,.status-panel h2,.plot-card h2,.network-panel h2{font-size:17px;margin:0 0 5px}
+.task-panel p,.plot-card p,.network-panel p{margin:4px 0 7px;line-height:1.3;font-size:11px}
+.task-flow{gap:5px}
+.task-flow span{padding:5px 7px;font-size:11px}
+
+.layout{
+  grid-template-columns:285px 1fr;
+  gap:10px;
+  margin-bottom:10px
+}
+.control-panel button{
+  width:auto;
+  margin:0 4px 6px 0;
+  padding:6px 9px;
+  font-size:12px
+}
+.control-panel label{
+  margin-top:7px;
+  gap:3px;
+  font-size:11px
+}
+.control-panel input{padding:4px 6px;font-size:12px}
+.help{font-size:9.5px;line-height:1.2}
+.fixed-architecture{
+  margin-top:8px;
+  padding-top:7px;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:2px 8px
+}
+.fixed-architecture h3{grid-column:1/-1;margin:0 0 3px;font-size:13px}
+.fixed-architecture p{margin:1px 0;font-size:10.5px}
+
+.status-grid{gap:7px}
+.metric{padding:8px}
+.metric span{font-size:10px}
+.metric strong{font-size:16px;margin-top:2px}
+.pipeline{gap:6px;margin-top:9px}
+.stage{padding:6px 8px}
+.stage span{font-size:9px}
+.teach-box{margin-top:8px;padding:6px 8px}
+.teach-box summary{font-size:11px}
+.teach-box p{font-size:10.5px;line-height:1.3;margin:5px 0}
+
+.plots{gap:10px}
+.plot-card{padding:9px}
+.plot-card h2{font-size:15px}
+.plot-card p{font-size:10px;margin:2px 0 5px}
+canvas{max-height:240px}
+
+.network-panel{margin-top:10px}
+#networkSvg{
+  min-height:250px;
+  height:260px;
+  margin-top:6px
+}
+
+.math-panel,.note-panel{margin-top:10px}
+.compact-details>summary{
+  cursor:pointer;
+  font-weight:700;
+  font-size:14px;
+  padding:2px 0
+}
+.details-body{margin-top:8px}
+.math-grid{gap:8px}
+.math-grid>div{padding:8px}
+.math-grid h3{font-size:13px;margin:0 0 4px}
+.formula.small{font-size:12px}
+.math-panel p,.note-panel p{font-size:10.5px;line-height:1.3}
+
+@media(max-width:1000px){
+  .task-panel,.layout,.plots,.math-grid{grid-template-columns:1fr}
+  .status-grid{grid-template-columns:1fr 1fr}
+  #networkSvg{height:auto}
+}
+
+
+/* ===== v8 user-controlled architecture ===== */
+.architecture-controls{
+  margin-bottom:8px;
+  padding:8px;
+  border:1px solid #dfe5ea;
+  border-radius:7px;
+  background:#f8fafb;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:6px;
+}
+.architecture-controls h3{
+  grid-column:1/-1;
+  margin:0 0 2px;
+  font-size:13px;
+}
+.architecture-controls label{
+  margin:0;
+}
+.architecture-controls select{
+  width:100%;
+  padding:4px 5px;
+  border:1px solid #cbd4dc;
+  border-radius:5px;
+  font-size:12px;
+  background:white;
+}
+.architecture-controls button{
+  grid-column:1/-1;
+  margin:1px 0 0;
+}
+.architecture-controls .help{
+  grid-column:1/-1;
+}
+
+
+/* ===== v8.1 polished interface + learned weight matrices ===== */
+:root{
+  --card:#ffffff;
+  --line:#d8e0e6;
+  --ink:#1f2933;
+  --muted:#6d7b87;
+  --soft:#f7f9fb;
+  --accent:#315d8f;
+}
+body{
+  background:
+    radial-gradient(circle at top left, rgba(49,93,143,.05), transparent 28%),
+    #f4f6f8;
+}
+.hero{
+  background:linear-gradient(135deg,#ffffff 0%,#f7fafc 100%);
+}
+.hero h1{
+  letter-spacing:-0.4px;
+}
+.badge{
+  background:#16202a;
+  color:#fff;
+  border-color:#16202a;
+}
+.mode-strip{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  padding:7px 18px;
+  background:#eef3f7;
+  border-bottom:1px solid #d8e0e6;
+}
+.mode-strip span{
+  padding:4px 8px;
+  border-radius:999px;
+  background:white;
+  border:1px solid #d5dde4;
+  font-size:10.5px;
+  color:#596875;
+}
+.control-panel,.status-panel,.plot-card,.network-panel,.weights-panel,.equation-panel,.task-panel,.math-panel,.note-panel{
+  box-shadow:0 2px 8px rgba(31,41,51,.035);
+}
+.control-panel button,.architecture-controls button,#refreshWeightsBtn{
+  transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
+}
+.control-panel button:hover,.architecture-controls button:hover,#refreshWeightsBtn:hover{
+  transform:translateY(-1px);
+  box-shadow:0 2px 7px rgba(31,41,51,.09);
+}
+.metric{
+  background:linear-gradient(180deg,#fbfcfd,#f5f8fa);
+}
+.metric strong{
+  letter-spacing:-0.2px;
+}
+.stage{
+  border-radius:9px;
+}
+.plot-card canvas{
+  border-radius:6px;
+}
+.weights-panel{
+  margin-top:10px;
+  background:white;
+  border:1px solid #d8dee5;
+  border-radius:10px;
+  padding:11px;
+}
+.weights-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+}
+.weights-header h2{
+  font-size:17px;
+  margin:0 0 4px;
+}
+.weights-header p{
+  margin:0;
+  color:#6d7b87;
+  font-size:10.5px;
+  line-height:1.35;
+}
+#refreshWeightsBtn{
+  padding:6px 9px;
+  border:1px solid #b9c3cc;
+  border-radius:7px;
+  background:white;
+  cursor:pointer;
+  font-size:11px;
+  white-space:nowrap;
+}
+.matrix-grid{
+  display:grid;
+  grid-template-columns:1fr 1.25fr 1fr 0.9fr;
+  gap:8px;
+  margin-top:9px;
+}
+.matrix-card{
+  min-width:0;
+  background:#f8fafb;
+  border:1px solid #dfe5ea;
+  border-radius:8px;
+  padding:8px;
+}
+.matrix-title{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  align-items:center;
+}
+.matrix-title strong{
+  font-size:13px;
+}
+.matrix-title span{
+  font-size:9.5px;
+  color:#7a8792;
+}
+.matrix-card p{
+  margin:3px 0 6px;
+  font-size:9.5px;
+  color:#7a8792;
+}
+.matrix-table-wrap{
+  overflow:auto;
+  max-height:190px;
+}
+.matrix-table{
+  border-collapse:separate;
+  border-spacing:2px;
+  font-variant-numeric:tabular-nums;
+  width:max-content;
+  min-width:100%;
+}
+.matrix-table th{
+  font-size:8.5px;
+  color:#71808d;
+  font-weight:600;
+  padding:2px 4px;
+  text-align:center;
+  position:sticky;
+  top:0;
+  background:#f8fafb;
+  z-index:1;
+}
+.matrix-table td{
+  min-width:42px;
+  padding:5px 4px;
+  border-radius:4px;
+  font-size:9px;
+  text-align:center;
+  border:1px solid rgba(0,0,0,.035);
+}
+.matrix-table .row-label{
+  background:transparent!important;
+  border:none;
+  color:#71808d;
+  font-weight:600;
+  min-width:26px;
+}
+.matrix-legend{
+  display:flex;
+  justify-content:flex-end;
+  gap:12px;
+  margin-top:7px;
+  color:#71808d;
+  font-size:9.5px;
+}
+.heat{
+  display:inline-block;
+  width:12px;
+  height:8px;
+  border-radius:3px;
+  margin-right:4px;
+  vertical-align:middle;
+}
+.heat.neg{background:rgba(207,121,45,.55)}
+.heat.zero{background:#eef2f5}
+.heat.pos{background:rgba(47,114,183,.55)}
+
+@media(max-width:1100px){
+  .matrix-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:700px){
+  .matrix-grid{grid-template-columns:1fr}
+}
+
+
+/* ===== Final visual polish ===== */
+a, button, select, input { transition: all .14s ease; }
+button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible {
+  outline: 2px solid rgba(49,93,143,.45);
+  outline-offset: 2px;
+}
+button:hover { transform: translateY(-1px); }
+section, .plot-card, .network-panel, .weights-panel {
+  backdrop-filter: blur(1px);
+}

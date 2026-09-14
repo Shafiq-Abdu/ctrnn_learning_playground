@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Train a CTRNN | CTRNN Learning Playground</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="module-nav">
+  <strong>CTRNN Learning Platform</strong>
+  <a href="../index.html">Home</a>
+  <a href="../dynamics/index.html">Explore Dynamics</a>
+  <a href="./index.html">Train a CTRNN</a>
+</nav>
+
+<header class="hero">
+  <div>
+    <h1>Train a CTRNN with Manual BPTT</h1>
+    <p>
+      Browser-only training: HTML + CSS + JavaScript. No PyTorch, no TensorFlow,
+      no automatic differentiation.
+    </p>
+  </div>
+  <span class="badge">Training mode</span>
+</header>
+
+<div class="mode-strip">
+  <span>Browser-only</span>
+  <span>Manual BPTT</span>
+  <span>SGD + gradient clipping</span>
+  <span>Live recurrent dynamics</span>
+</div>
+
+<main>
+<section class="equation-panel">
+  <div class="formula">
+    h<sub>t+1</sub> =
+    h<sub>t</sub> +
+    (dt/τ)[−h<sub>t</sub> +
+    tanh(W<sub>rec</sub>h<sub>t</sub> + W<sub>in</sub>x<sub>t</sub> + b)]
+  </div>
+  <div class="formula">
+    y<sub>t</sub> = W<sub>out</sub>h<sub>t+1</sub> + b<sub>out</sub>
+  </div>
+  <p>
+    We numerically discretize the continuous-time equation with Euler's method.
+    BPTT then differentiates through this entire sequence of Euler steps.
+  </p>
+</section>
+
+<section class="task-panel">
+  <div>
+    <h2>1. The task: delayed response</h2>
+    <p>
+      Input channel <b>x₁</b> receives a pulse from <b>1 to 2 s</b>. The desired
+      response appears later on output channel <b>y₁</b>, from <b>3 to 5 s</b>.
+      Any additional input and output channels are present but set to zero for this task.
+    </p>
+    <div class="task-flow">
+      <span>x₁(t): pulse</span>
+      <span>→ recurrent memory →</span>
+      <span>target y₁(t): delayed pulse</span>
+    </div>
+  </div>
+  <canvas id="taskCanvas" width="900" height="150"></canvas>
+</section>
+
+<section class="layout">
+  <aside class="control-panel">
+    <h2>2. Training controls</h2>
+
+    <div class="architecture-controls">
+      <h3>Architecture</h3>
+
+      <label>
+        Input units
+        <select id="inputSizeSelect">
+          <option value="1" selected>1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+        </select>
+      </label>
+
+      <label>
+        Hidden units
+        <select id="hiddenSizeSelect">
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4" selected>4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="8">8</option>
+        </select>
+      </label>
+
+      <label>
+        Output units
+        <select id="outputSizeSelect">
+          <option value="1" selected>1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+        </select>
+      </label>
+
+      <button id="applyArchitectureBtn">Apply architecture</button>
+
+      <span class="help">
+        Changing the architecture creates new weight matrices and resets training.
+      </span>
+    </div>
+
+    <button id="trainBtn">▶ Train</button>
+    <button id="pauseBtn">⏸ Pause</button>
+    <button id="stepBtn">Step 1 epoch</button>
+    <button id="resetBtn">↺ Reset weights</button>
+
+    <label>
+      Learning rate η
+      <input id="lrInput" type="number" min="0.001" max="1" step="0.01" value="0.10">
+      <span class="help">Size of each SGD weight update.</span>
+    </label>
+
+    <label>
+      Total epochs
+      <input id="epochLimitInput" type="number" min="1" max="10000" step="100" value="1500">
+      <span class="help">One epoch = one full forward pass + one backward pass through the trial.</span>
+    </label>
+
+    <label>
+      Epochs per animation frame
+      <input id="epochsPerFrameInput" type="number" min="1" max="50" step="1" value="5">
+      <span class="help">Higher values train faster visually.</span>
+    </label>
+
+    <label>
+      Gradient clipping threshold
+      <input id="clipInput" type="number" min="0.1" max="10" step="0.1" value="1.0">
+      <span class="help">Prevents very large recurrent gradients from causing unstable updates.</span>
+    </label>
+
+    <div class="fixed-architecture">
+      <h3>Current model</h3>
+      <p><b>Input:</b> <span id="archInputText">1</span></p>
+      <p><b>Hidden:</b> <span id="archHiddenText">4</span></p>
+      <p><b>Output:</b> <span id="archOutputText">1</span></p>
+      <p><b>Activation:</b> tanh</p>
+      <p><b>τ:</b> 1.0 s</p>
+      <p><b>dt:</b> 0.1 s</p>
+      <p><b>Trial:</b> 6.0 s</p>
+    </div>
+  </aside>
+
+  <section class="status-panel">
+    <h2>3. What is training doing?</h2>
+
+    <div class="status-grid">
+      <div class="metric">
+        <span>Epoch</span>
+        <strong id="epochText">0 / 1500</strong>
+      </div>
+      <div class="metric">
+        <span>MSE loss</span>
+        <strong id="lossText">—</strong>
+      </div>
+      <div class="metric">
+        <span>Gradient norm</span>
+        <strong id="gradText">—</strong>
+      </div>
+      <div class="metric">
+        <span>Status</span>
+        <strong id="statusText">Ready</strong>
+      </div>
+    </div>
+
+    <div class="pipeline">
+      <div class="stage">
+        <b>① Forward</b>
+        <span>simulate h(t) and y(t)</span>
+      </div>
+      <div>→</div>
+      <div class="stage">
+        <b>② Loss</b>
+        <span>compare y(t) with target</span>
+      </div>
+      <div>→</div>
+      <div class="stage">
+        <b>③ BPTT</b>
+        <span>send error backward through time</span>
+      </div>
+      <div>→</div>
+      <div class="stage">
+        <b>④ Update</b>
+        <span>W ← W − η∇W</span>
+      </div>
+    </div>
+
+    <details open class="teach-box">
+      <summary>What does “backward through time” mean?</summary>
+      <p>
+        h(t) influences h(t+dt), which influences later states. Therefore an output error
+        at a late time can be caused by recurrent activity much earlier in the trial.
+        BPTT follows these causal links backward through the unrolled Euler steps.
+      </p>
+    </details>
+  </section>
+</section>
+
+<section class="plots">
+  <article class="plot-card">
+    <h2>4. Output: prediction vs target</h2>
+    <p>
+      Black = trained network output. Dashed = desired target. Light gray = input pulse.
+    </p>
+    <canvas id="outputCanvas" width="900" height="240"></canvas>
+  </article>
+
+  <article class="plot-card">
+    <h2>5. Training loss</h2>
+    <p>MSE should generally decrease as the weights learn the task.</p>
+    <canvas id="lossCanvas" width="900" height="240"></canvas>
+  </article>
+
+  <article class="plot-card">
+    <h2>6. Hidden-unit activity</h2>
+    <p>
+      These four curves are the learned internal recurrent state h₁(t), …, h₄(t).
+    </p>
+    <canvas id="hiddenCanvas" width="900" height="240"></canvas>
+  </article>
+
+  <article class="plot-card">
+    <h2>7. Population trajectory</h2>
+    <p>
+      PCA projects the 4D hidden trajectory into PC1 and PC2.
+      Green = trial start, black = trial end.
+    </p>
+    <canvas id="pcaCanvas" width="700" height="280"></canvas>
+  </article>
+</section>
+
+<section class="network-panel">
+  <div>
+    <h2>8. Learned network</h2>
+    <p>
+      Blue = positive weight, orange = negative weight, line thickness = |weight|.
+      These lines change during training because SGD changes the matrices.
+    </p>
+  </div>
+  <svg id="networkSvg" viewBox="0 0 900 430"></svg>
+</section>
+
+<section class="weights-panel">
+  <div class="weights-header">
+    <div>
+      <h2>9. Weight matrices</h2>
+      <p>
+        These are the current learned parameters. The values update during training,
+        so after training you can inspect exactly what the network learned.
+      </p>
+    </div>
+    <button id="refreshWeightsBtn">Refresh matrices</button>
+  </div>
+
+  <div class="matrix-grid">
+    <div class="matrix-card">
+      <div class="matrix-title">
+        <strong>W<sub>in</sub></strong>
+        <span id="winShape"></span>
+      </div>
+      <p>Input → hidden weights</p>
+      <div id="winMatrix" class="matrix-table-wrap"></div>
+    </div>
+
+    <div class="matrix-card">
+      <div class="matrix-title">
+        <strong>W<sub>rec</sub></strong>
+        <span id="wrecShape"></span>
+      </div>
+      <p>Hidden → hidden recurrent weights</p>
+      <div id="wrecMatrix" class="matrix-table-wrap"></div>
+    </div>
+
+    <div class="matrix-card">
+      <div class="matrix-title">
+        <strong>W<sub>out</sub></strong>
+        <span id="woutShape"></span>
+      </div>
+      <p>Hidden → output weights</p>
+      <div id="woutMatrix" class="matrix-table-wrap"></div>
+    </div>
+
+    <div class="matrix-card bias-card">
+      <div class="matrix-title">
+        <strong>Biases</strong>
+        <span>b and b<sub>out</sub></span>
+      </div>
+      <p>Hidden and output bias terms</p>
+      <div id="biasMatrix" class="matrix-table-wrap"></div>
+    </div>
+  </div>
+
+  <div class="matrix-legend">
+    <span><i class="heat neg"></i> negative</span>
+    <span><i class="heat zero"></i> near zero</span>
+    <span><i class="heat pos"></i> positive</span>
+  </div>
+</section>
+
+<details class="math-panel compact-details">
+  <summary>10. BPTT mathematics implemented in JavaScript</summary>
+  <div class="details-body">
+<h2>9. The BPTT mathematics implemented in JavaScript</h2>
+
+  <div class="math-grid">
+    <div>
+      <h3>Forward Euler step</h3>
+      <div class="formula small">
+        α = dt/τ
+      </div>
+      <div class="formula small">
+        a<sub>t</sub> = W<sub>rec</sub>h<sub>t</sub> + W<sub>in</sub>x<sub>t</sub> + b
+      </div>
+      <div class="formula small">
+        h<sub>t+1</sub> = (1−α)h<sub>t</sub> + α tanh(a<sub>t</sub>)
+      </div>
+    </div>
+
+    <div>
+      <h3>Loss</h3>
+      <div class="formula small">
+        L = (1/T) Σ<sub>t</sub>(y<sub>t</sub> − y<sub>t</sub><sup>target</sup>)²
+      </div>
+    </div>
+
+    <div>
+      <h3>Backward recurrent signal</h3>
+      <div class="formula small">
+        q<sub>t</sub> =
+        α [∂L/∂h<sub>t+1</sub>] ⊙ tanh′(a<sub>t</sub>)
+      </div>
+      <div class="formula small">
+        ∂L/∂W<sub>rec</sub> += q<sub>t</sub>h<sub>t</sub><sup>T</sup>
+      </div>
+    </div>
+
+    <div>
+      <h3>SGD update</h3>
+      <div class="formula small">
+        W ← W − η ∂L/∂W
+      </div>
+      <p>
+        The code computes these derivatives explicitly. There is no autograd engine.
+      </p>
+    </div>
+  </div>
+  </div>
+</details>
+
+<details class="note-panel compact-details">
+  <summary>Important note</summary>
+  <div class="details-body">
+    <p>
+      The current setup keeps the task fixed while allowing the architecture to change. The delayed-response task remains fixed so architecture changes can be compared cleanly.
+      Later versions can expose task timing, activation, optimizer, multiple trials and task families.
+    </p>
+  </div>
+</details>
+
+</main>
+<script src="app.js"></script>
+</body>
+</html>

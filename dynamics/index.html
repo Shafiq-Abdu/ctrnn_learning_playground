@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Explore Dynamics | CTRNN Learning Playground</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<nav class="module-nav" style="padding:10px 22px;background:#16202a;color:white;display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+  <strong>CTRNN Learning Platform</strong>
+  <a href="../index.html" style="color:white">Home</a>
+  <a href="./index.html" style="color:white">Explore Dynamics</a>
+  <a href="../training/index.html" style="color:white">Train a CTRNN</a>
+</nav>
+
+
+<header class="topbar">
+  <div class="brand">
+    <div>
+      <h1>CTRNN Learning Playground</h1>
+      <p class="subtitle">Explore continuous-time recurrent neural-network dynamics interactively.</p>
+    </div>
+    <span class="mode-badge">Simulation mode — no training</span>
+  </div>
+
+  <div class="equation-banner">
+    <div class="formula">
+      τ dh/dt = −h + f(W<sub>rec</sub>h + W<sub>in</sub>x)
+    </div>
+    <div class="formula-note">
+      The hidden state h(t) changes continuously according to recurrent input, external input, the activation function, and the time constant τ.
+    </div>
+  </div>
+
+  <div class="top-controls">
+    <button id="startBtn">▶ Start</button>
+    <button id="pauseBtn">⏸ Pause</button>
+    <button id="resetBtn">↺ Reset</button>
+
+    <label>
+      Activation f(·)
+      <select id="activationSelect">
+        <option value="tanh" selected>Tanh</option>
+        <option value="relu">ReLU</option>
+        <option value="sigmoid">Sigmoid</option>
+        <option value="linear">Linear</option>
+      </select>
+      <span class="help">Nonlinearity applied to the total input of each hidden unit.</span>
+    </label>
+
+    <label>
+      tau (τ)
+      <input id="tauSlider" type="range" min="0.1" max="5" step="0.1" value="1" />
+      <span id="tauValue">1.0</span>
+      <span class="help">Larger τ → slower dynamics. Smaller τ → faster dynamics.</span>
+    </label>
+
+    <label>
+      dt
+      <input id="dtSlider" type="range" min="0.005" max="0.1" step="0.005" value="0.02" />
+      <span id="dtValue">0.020</span>
+      <span class="help">Numerical integration step used by Euler's method.</span>
+    </label>
+
+    <label>
+      Duration (s)
+      <input id="durationInput" type="number" min="0.1" step="0.5" value="10" />
+      <span class="help">Total simulated time before the run automatically stops.</span>
+    </label>
+
+    <div class="clock-box">
+      <span>Simulation clock</span>
+      <strong id="clockValue">t = 0.00 s</strong>
+      <small>Simulation time, not wall-clock time.</small>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section class="learning-strip">
+  <div>
+    <strong>How to read the model:</strong>
+    x(t) = external stimulus/input,
+    h(t) = recurrent hidden-state population,
+    y(t) = readout/output.
+  </div>
+  <div>
+    Blue connection = positive weight,
+    orange connection = negative weight,
+    thicker line = larger |weight|.
+  </div>
+</section>
+
+<section class="network-layout">
+
+  <div class="panel">
+    <h2>1. External input x(t)</h2>
+    <p class="section-explain">
+      These are signals coming from outside the recurrent population. In neuroscience, they can represent cues, sensory evidence, task signals, or injected drive.
+    </p>
+
+    <div class="mini-formula">
+      I<sub>ext</sub>(t) = W<sub>in</sub>x(t)
+    </div>
+
+    <label>
+      Number of input units
+      <select id="inputCount">
+        <option value="1">1</option>
+        <option value="2" selected>2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+      </select>
+      <span class="help">Each xᵢ(t) is an independent external input channel.</span>
+    </label>
+
+    <div id="inputControls"></div>
+
+    <details class="teach-box">
+      <summary>What do Constant, Step, Pulse and Sine mean?</summary>
+      <div>
+        <p><b>Constant:</b> x(t)=A for the whole run.</p>
+        <p><b>Step:</b> x(t)=0 before the start time, then x(t)=A afterward.</p>
+        <p><b>Pulse:</b> x(t)=A only between start and end.</p>
+        <p><b>Sine:</b> x(t)=A sin(2πf(t−t<sub>start</sub>)) within the chosen interval.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="panel hidden-panel">
+    <div class="hidden-header">
+      <div>
+        <h2>2. Recurrent hidden population h(t)</h2>
+        <p class="section-explain">
+          These units form the dynamical system. Each hidden unit is influenced by external input and by the current activity of the recurrent population.
+        </p>
+        <span id="hiddenLabel">4 hidden units</span>
+      </div>
+
+      <div class="hidden-buttons">
+        <button id="minusHidden">−</button>
+        <span id="hiddenCountText">4</span>
+        <button id="plusHidden">+</button>
+      </div>
+    </div>
+
+    <div class="mini-formula">
+      τ dh<sub>i</sub>/dt = −h<sub>i</sub> + f(Σⱼ W<sup>rec</sup><sub>ij</sub>h<sub>j</sub> + Σₖ W<sup>in</sup><sub>ik</sub>x<sub>k</sub>)
+    </div>
+
+    <div class="initial-state-section">
+      <h3>Initial hidden state h(0)</h3>
+      <p class="small-text">
+        These values determine where the neural population begins in state space.
+      </p>
+      <div id="hiddenInitialControls" class="initial-grid"></div>
+    </div>
+
+    <svg id="networkSvg" viewBox="0 0 760 400" aria-label="CTRNN network diagram"></svg>
+
+    <div class="connection-control">
+      <h3 id="connectionType">Selected connection</h3>
+      <p id="weightDescription">Click a connection in the network.</p>
+      <p id="connectionMeaning" class="small-text">
+        Select any line to inspect and change its weight.
+      </p>
+      <input id="weightSlider" type="range" min="-3" max="3" step="0.1" value="0" disabled />
+      <span id="weightValue">0.0</span>
+    </div>
+
+    <details class="teach-box">
+      <summary>What do the three connection types mean?</summary>
+      <div>
+        <p><b>x → h:</b> input weight in W<sub>in</sub>. It controls how strongly an external input affects a hidden unit.</p>
+        <p><b>h → h:</b> recurrent weight in W<sub>rec</sub>. It controls how hidden units influence one another over time.</p>
+        <p><b>h → y:</b> readout weight in W<sub>out</sub>. It controls how hidden activity contributes to the output.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="panel">
+    <h2>3. Output / readout y(t)</h2>
+
+    <p class="section-explain">
+      The output is not another recurrent state. It is a readout from the current hidden population.
+    </p>
+
+    <div class="mini-formula">
+      y(t) = W<sub>out</sub>h(t)
+    </div>
+
+    <label>
+      Number of output units
+      <select id="outputCount">
+        <option value="1" selected>1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+      </select>
+    </label>
+
+    <div id="outputValues"></div>
+
+    <details class="teach-box">
+      <summary>What is a linear readout?</summary>
+      <div>
+        <p>
+          Each output is a weighted sum of the hidden-state activities. For one output:
+        </p>
+        <p class="mini-formula">y = w₁h₁ + w₂h₂ + … + wₙhₙ</p>
+      </div>
+    </details>
+  </div>
+
+</section>
+
+<section class="analysis-panel">
+  <div class="analysis-header">
+    <div>
+      <h2>4. Fixed-point & stability analysis</h2>
+      <p>
+        A fixed point h* is a state where the dynamics stop changing:
+      </p>
+      <div class="mini-formula">dh/dt = 0</div>
+    </div>
+
+    <div class="analysis-controls">
+      <label>
+        Analysis input
+        <select id="analysisInputMode">
+          <option value="zero" selected>Set x(t) = 0</option>
+          <option value="current">Hold current x(t) constant</option>
+        </select>
+        <span class="help">Choose whether to analyze intrinsic dynamics or the dynamics under the current input.</span>
+      </label>
+
+      <button id="analyzeBtn">Analyze fixed point</button>
+    </div>
+  </div>
+
+  <div class="analysis-explain-grid">
+    <div class="explain-card">
+      <b>Set x(t)=0</b>
+      <p>Remove all external drive and ask: where does the recurrent network settle by itself?</p>
+    </div>
+    <div class="explain-card">
+      <b>Hold current x(t) constant</b>
+      <p>Freeze the present input and ask: if that input stayed forever, where would the network settle?</p>
+    </div>
+  </div>
+
+  <div class="analysis-results">
+    <div class="analysis-card">
+      <h3>Fixed point h*</h3>
+      <div id="fixedPointText">Not analyzed yet.</div>
+      <p class="small-text">At h*, the vector field is approximately zero.</p>
+    </div>
+
+    <div class="analysis-card">
+      <h3>Stability</h3>
+      <div id="stabilityText">Not analyzed yet.</div>
+      <p class="small-text">
+        Stable: nearby trajectories return. Unstable: at least one nearby direction moves away.
+      </p>
+    </div>
+
+    <div class="analysis-card">
+      <h3>Jacobian eigenvalues</h3>
+      <div id="eigenText">Not analyzed yet.</div>
+      <p class="small-text">
+        Negative real parts imply local decay toward the fixed point.
+      </p>
+    </div>
+  </div>
+
+  <details class="teach-box">
+    <summary>How does the Jacobian determine stability?</summary>
+    <div>
+      <p>
+        Near a fixed point, the nonlinear system is approximated by a linear system:
+      </p>
+      <p class="mini-formula">dδh/dt ≈ J δh</p>
+      <p>
+        If every eigenvalue of J has a negative real part, small perturbations decay and the fixed point is locally stable.
+      </p>
+    </div>
+  </details>
+</section>
+
+<section class="plot-layout">
+
+  <div class="plot-panel">
+    <h2>5. Neural activity over time</h2>
+    <p>
+      Solid lines show hᵢ(t). Dashed gray lines show xᵢ(t).
+    </p>
+    <p class="small-text">
+      Flat hidden-state curves indicate that the system may be approaching a steady state.
+    </p>
+    <canvas id="activityCanvas" width="900" height="390"></canvas>
+  </div>
+
+  <div class="plot-panel">
+    <div class="trajectory-header">
+      <div>
+        <h2>6. Population trajectory</h2>
+        <p id="trajectoryDescription">Raw population view: h1 versus h2</p>
+      </div>
+
+      <label>
+        View
+        <select id="trajectoryMode">
+          <option value="raw" selected>h1 vs h2</option>
+          <option value="pca">PCA: PC1 vs PC2</option>
+        </select>
+      </label>
+    </div>
+
+    <div id="pcaStatus" class="pca-status">
+      PCA is computed after Pause or when the run ends.
+    </div>
+
+    <div class="trajectory-legend">
+      <span><span class="dot green"></span> Start</span>
+      <span><span class="dot black"></span> End/current state</span>
+      <span><span class="cross-red">+</span> Fixed point (raw view only)</span>
+    </div>
+
+    <canvas id="trajectoryCanvas" width="700" height="470"></canvas>
+
+    <details class="teach-box">
+      <summary>What does the trajectory mean?</summary>
+      <div>
+        <p>
+          The hidden population has one coordinate per hidden unit. With four hidden units, h(t) lives in 4D state space.
+        </p>
+        <p>
+          The raw view shows h₁ against h₂. The PCA view projects the full hidden-state trajectory into two principal components.
+        </p>
+      </div>
+    </details>
+  </div>
+
+</section>
+
+<section class="footer-learning">
+  <h2>Learning summary</h2>
+  <div class="summary-grid">
+    <div><b>x(t)</b><br>External stimulus or drive</div>
+    <div><b>W<sub>in</sub></b><br>Maps external input into the recurrent population</div>
+    <div><b>h(t)</b><br>Time-varying recurrent population state</div>
+    <div><b>W<sub>rec</sub></b><br>Defines recurrent interactions and dynamics</div>
+    <div><b>y(t)</b><br>Readout of the hidden state</div>
+    <div><b>h*</b><br>Fixed point where dh/dt=0</div>
+    <div><b>J</b><br>Local linearization near a fixed point</div>
+    <div><b>Eigenvalues</b><br>Determine local stability</div>
+  </div>
+</section>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
